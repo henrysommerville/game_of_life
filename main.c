@@ -9,7 +9,7 @@
 #define HEIGHT 400
 #define NUM_OF_CELLS 40
 
-#define UPDATE_TIME 10
+#define UPDATE_TIME 0.5
 
 void draw_grid_lines(void) {
     for (int r = 0; r < WIDTH; r++) {
@@ -37,6 +37,7 @@ int calculate_live_neighbours(int Grid[NUM_OF_CELLS][NUM_OF_CELLS], int r, int c
             if (row == r && col == c) {
                 continue;
             } else if (Grid[row][col] == 1) {
+                fflush(stdout);
                 live_neighbours++;
             }
         }
@@ -55,11 +56,14 @@ void redraw_grid(int Grid[NUM_OF_CELLS][NUM_OF_CELLS]) {
         }
     }
 }
+
+
+
 int main() {
     int Grid[NUM_OF_CELLS][NUM_OF_CELLS] = {0};
     bool play = false;
     bool paused = false;
-    bool updateReady = true;
+    bool updateReady = false;
     int last_update = 0;
 
     InitWindow(WIDTH, HEIGHT, "TEST");
@@ -83,10 +87,14 @@ int main() {
             if (IsKeyPressed(KEY_SPACE)) {
                 play = true;
             }
+            updateReady = false;
 
         } else if (!paused) {
             // game loop
+            redraw_grid(Grid);
             if (updateReady) {
+                updateReady = false;
+                int newGrid[NUM_OF_CELLS][NUM_OF_CELLS] = {0};
                 for (int r = 0; r < NUM_OF_CELLS; r++) {
                     for (int c = 0; c < NUM_OF_CELLS; c++) {
                         // 1. Any live cell with fewer than two live neighbors dies
@@ -95,18 +103,23 @@ int main() {
                         // 4. Any dead cell with exactly three live neighbors is reborn
                         int live_neighbours = calculate_live_neighbours(Grid, r, c);
                         if (live_neighbours < 2 && Grid[r][c] == 1) {
-                            Grid[r][c] = 0;
+                            newGrid[r][c] = 0;
                         } else if (live_neighbours <= 3 && Grid[r][c] == 1) {
-                            Grid[r][c] = 1;
+                            newGrid[r][c] = 1;
                         } else if (live_neighbours > 3 && Grid[r][c] == 1) {
-                            Grid[r][c] = 0;
+                            newGrid[r][c] = 0;
                         } else if (live_neighbours == 3 && Grid[r][c] == 0) {
-                            Grid[r][c] = 1;
+                            newGrid[r][c] = 1;
                         }
                     }
                 }
+                
+                for (int r = 0; r < NUM_OF_CELLS; r++) {
+                    for (int c = 0; c < NUM_OF_CELLS; c++) {
+                        Grid[r][c] = newGrid[r][c];
+                    }
+                }
 
-                redraw_grid(Grid);
             }
             if (IsKeyPressed(KEY_SPACE)) {
                 play = false;
